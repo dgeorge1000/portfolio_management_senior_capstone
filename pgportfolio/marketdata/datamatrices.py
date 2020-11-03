@@ -34,7 +34,6 @@ class DataMatrices:
         """
         start = int(start)
         self.__end = int(end)
-
         # assert window_size >= MIN_NUM_PERIOD
         self.__coin_no = coin_filter
         type_list = get_type_list(feature_number)
@@ -49,16 +48,24 @@ class DataMatrices:
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
+            #Go from [coins*features, index] to [features, coins, index]
+            self.raw = self.__global_data.values.reshape(
+                len(self.__global_data.index),
+                len(self.__global_data.columns.levels[0]),
+                len(self.__global_data.columns.levels[1]),
+                )    
+            self.raw = self.raw.transpose(2,1,0)
         else:
             raise ValueError("market {} is not valid".format(market))
         self.__period_length = period
         # portfolio vector memory, [time, assets]
-        self.__PVM = pd.DataFrame(index=self.__global_data.minor_axis,
-                                  columns=self.__global_data.major_axis)
+        self.__PVM = pd.DataFrame(index=self.__global_data.index, #time index
+                                  columns=self.__global_data.columns.levels[0]) #first level is coin names
         self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)
 
+        print(self.__PVM)
         self._window_size = window_size
-        self._num_periods = len(self.__global_data.minor_axis)
+        self._num_periods = len(self.__global_data.index)
         self.__divide_data(test_portion, portion_reversed)
 
         self._portion_reversed = portion_reversed
@@ -157,20 +164,22 @@ class DataMatrices:
         return batch
 
     def __pack_samples(self, indexs):
+
+        
         indexs = np.array(indexs)
         last_w = self.__PVM.values[indexs-1, :]
-
         def setw(w):
             self.__PVM.iloc[indexs, :] = w
-        M = [self.get_submatrix(index) for index in indexs]
+        M = [self.get_submatrix(self.raw ,index) for index in indexs]
         M = np.array(M)
-        X = M[:, :, :, :-1]
-        y = M[:, :, :, -1] / M[:, 0, None, :, -2]
+        X = M[ :,: , :, :-1]
+        y = M[ :, :, :, -1] / M[:, 0 , None, : , -2]
+
         return {"X": X, "y": y, "last_w": last_w, "setw": setw}
 
     # volume in y is the volume in next access period
-    def get_submatrix(self, ind):
-        return self.__global_data.values[:, :, ind:ind+self._window_size+1]
+    def get_submatrix(self, raw, ind):
+        return raw[:,:,ind:ind+self._window_size+1]
 
     def __divide_data(self, test_portion, portion_reversed):
         train_portion = 1 - test_portion

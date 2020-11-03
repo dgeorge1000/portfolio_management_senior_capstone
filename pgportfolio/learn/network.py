@@ -14,7 +14,8 @@ class NeuralNetWork:
         if device == "cpu":
             tf_config.gpu_options.per_process_gpu_memory_fraction = 0
         else:
-            tf_config.gpu_options.per_process_gpu_memory_fraction = 0.2
+            tf.config.experimental.set_memory_growth(tf.config.experimental.list_physical_devices("GPU")[0], True)
+            tf_config.gpu_options.per_process_gpu_memory_fraction = 1
         self.input_num = tf.placeholder(tf.int32, shape=[])
         self.input_tensor = tf.placeholder(tf.float32, shape=[None, feature_number, rows, columns])
         self.previous_w = tf.placeholder(tf.float32, shape=[None, rows])

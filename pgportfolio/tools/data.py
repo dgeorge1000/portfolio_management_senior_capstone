@@ -113,16 +113,15 @@ def get_volume_forward(time_span, portion, portion_reversed):
 
 def panel_fillna(panel, type="bfill"):
     """
-    fill nan along the 3rd axis
+    fill nan along the 3rd axis (simplified from switch from panel to dataframe)
     :param panel: the panel to be filled
     :param type: bfill or ffill
     """
-    frames = {}
-    for item in panel.items:
-        if type == "both":
-            frames[item] = panel.loc[item].fillna(axis=1, method="bfill").\
-                fillna(axis=1, method="ffill")
-        else:
-            frames[item] = panel.loc[item].fillna(axis=1, method=type)
-    return pd.Panel(frames)
+    if type == "both":
+        panel = panel.fillna(axis=1, method="bfill").\
+        fillna(axis=1, method="ffill")
+    else:
+        panel = panel.fillna(axis=1, method=type)
+            
+    return panel
 
