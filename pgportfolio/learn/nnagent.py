@@ -109,7 +109,27 @@ class NNAgent:
             return -tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output[:] * self.__future_price, reduction_indices=[1])
                                           -tf.reduce_sum(tf.abs(self.__net.output[:, 1:] - self.__net.previous_w)
                                                          *self.__commission_ratio, reduction_indices=[1])))
-
+        
+        def riskfactor():
+            logmean = tf.log(self.pv_vector)
+            return -tf.reduce_mean(logmean - 0.00005*tf.math.reduce_std(logmean)**2 )
+        
+        def transactioncostfactor():
+            
+            lastwnocash = self.__net.previous_w
+            currentwnocash = self.__net.output[:, 1:]
+            transfactor = tf.norm(currentwnocash-lastwnocash, 1)
+            logreturn = tf.reduce_mean(tf.log(self.pv_vector))
+            return -logreturn + 0.00000001*transfactor
+        
+        def riskandtcfactor():
+            logmean = tf.log(self.pv_vector)
+            lastwnocash = self.__net.previous_w
+            currentwnocash = self.__net.output[:, 1:]
+            transfactor = tf.norm(currentwnocash-lastwnocash, 1)
+            logreturnwrisk = tf.reduce_mean(logmean - 0.00005*tf.math.reduce_std(logmean)**2 )
+            return -logreturnwrisk + 0.00000001*transfactor
+            
         loss_function = loss_function5
         if self.__config["training"]["loss_function"] == "loss_function4":
             loss_function = loss_function4
@@ -121,7 +141,13 @@ class NNAgent:
             loss_function = loss_function7
         elif self.__config["training"]["loss_function"] == "loss_function8":
             loss_function = with_last_w
-
+        elif self.__config["training"]["loss_function"] == "riskfactor":
+            loss_function = riskfactor
+        elif self.__config["training"]["loss_function"] == "transactioncostfactor":
+            loss_function = transactioncostfactor
+        elif self.__config["training"]["loss_function"] == "riskandtcfactor":
+            loss_function = riskandtcfactor
+    
         loss_tensor = loss_function()
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         if regularization_losses:
@@ -160,6 +186,12 @@ class NNAgent:
         """
         tensors = list(tensors)
         tensors.append(self.__net.output)
+        #print(x)
+        if np.any(np.isnan(x)):
+            print(x)
+        
+        #print(self.__net.previous_w, self.__net.output)
+        
         assert not np.any(np.isnan(x))
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)),\

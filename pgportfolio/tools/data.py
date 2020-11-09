@@ -117,11 +117,13 @@ def panel_fillna(panel, type="bfill"):
     :param panel: the panel to be filled
     :param type: bfill or ffill
     """
+    print(panel)
     if type == "both":
-        panel = panel.fillna(axis=1, method="bfill").\
-        fillna(axis=1, method="ffill")
+        panel = panel.fillna(axis=0, method="bfill")
+        panel = panel.fillna(axis=0, method="ffill")
     else:
-        panel = panel.fillna(axis=1, method=type)
-            
+        panel = panel.fillna(axis=0, method=type)
+    
+    #print(newpanel)
     return panel
 
