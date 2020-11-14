@@ -44,9 +44,9 @@ class HistoryManager:
         """
         :return a numpy ndarray whose axis is [feature, coin, time]
         """
-        return self.get_global_panel(start, end, period, features).values
+        return self.get_global_dataframe(start, end, period, features).values
 
-    def get_global_panel(self, start, end, period=300, features=('close',)):
+    def get_global_dataframe(self, start, end, period=300, features=('close',)):
         """
         :param start/end: linux timestamp in seconds
         :param period: time interval of each data access point

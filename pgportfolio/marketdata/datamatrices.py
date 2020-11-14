@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
 import pgportfolio.marketdata.globaldatamatrix as gdm
+import pgportfolio.marketdata.stockglobaldatamatrix as sgdm
 import numpy as np
 import pandas as pd
 import logging
@@ -32,6 +33,7 @@ class DataMatrices:
         :param portion_reversed: if False, the order to sets are [train, validation, test]
         else the order is [test, validation, train]
         """
+        market = "yahoo"
         start = int(start)
         self.__end = int(end)
         # assert window_size >= MIN_NUM_PERIOD
@@ -40,23 +42,32 @@ class DataMatrices:
         self.__features = type_list
         self.feature_number = feature_number
         volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)
-        self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
+        if market == "poloniex":
+            self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
                                                     volume_average_days=volume_average_days,
                                                     volume_forward=volume_forward, online=online)
-        if market == "poloniex":
-            self.__global_data = self.__history_manager.get_global_panel(start,
+            self.__global_data = self.__history_manager.get_global_dataframe(start,
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
-            #Go from [coins*features, index] to [features, coins, index]
-            self.raw = self.__global_data.values.reshape(
-                len(self.__global_data.index),
-                len(self.__global_data.columns.levels[0]),
-                len(self.__global_data.columns.levels[1]),
-                )    
-            self.raw = self.raw.transpose(2,1,0)
+        elif market == "yahoo":
+            self.__history_manager = sgdm.StockHistoryManager(coin_number=coin_filter, end=self.__end,
+                                                    volume_average_days=volume_average_days,
+                                                    volume_forward=volume_forward, online=online)
+            print(start, self.__end, type_list)
+            self.__global_data = self.__history_manager.get_global_dataframe(start,
+                                                                         self.__end,
+                                                                         type_list)
         else:
             raise ValueError("market {} is not valid".format(market))
+                    #Go from [coins*features, index] to [features, coins, index]
+
+        self.raw = self.__global_data.values.reshape(
+            len(self.__global_data.index),
+            len(self.__global_data.columns.levels[0]),
+            len(self.__global_data.columns.levels[1]),
+            )    
+        self.raw = self.raw.transpose(2,1,0)
         self.__period_length = period
         # portfolio vector memory, [time, assets]
         self.__PVM = pd.DataFrame(index=self.__global_data.index, #time index
