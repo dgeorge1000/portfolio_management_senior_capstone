@@ -69,6 +69,10 @@ def fill_layers_default(layers):
             set_missing(layer, "weight_decay", 0.0)
         elif layer["type"] == "DropOut":
             pass
+        elif layer["type"] == "CNN_LSTM":
+            pass
+        elif layer["type"] == "TCCBlock":
+            set_missing(layer, "regularizer", None)
         else:
             raise ValueError("layer name {} not supported".format(layer["type"]))
 

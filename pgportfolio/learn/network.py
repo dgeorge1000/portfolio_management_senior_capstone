@@ -100,6 +100,62 @@ class CNN(NeuralNetWork):
                                                   activation="softmax",
                                                   regularizer=layer["regularizer"],
                                                   weight_decay=layer["weight_decay"])
+            elif layer["type"] == "CNN_LSTM":
+                network = tf.transpose(network, [0, 2, 3, 1])
+                resultlist = []
+                reuse = False
+                for i in range(self._rows):
+                    if i > 0:
+                        reuse = True
+                    result = tflearn.layers.simple_rnn(network[:, :, :, i],
+                                                     int(layer["neuron_number"]),
+                                                     dropout=0,
+                                                     scope="lstm"+str(layer_number),
+                                                     reuse=reuse)
+                    resultlist.append(result)
+                network = tf.stack(resultlist)
+                network = tf.transpose(network, [1, 0, 2])
+                network = tf.reshape(network, [-1, self._rows, 1, int(layer["neuron_number"])])                    
+                    
+            elif layer["type"] == "TCCBlock":
+                start = tflearn.layers.conv_2d(network, int(layer["filter_number"]), 
+                                                             [1,1],
+                                                             padding="same",
+                                                             weight_decay=0.0)
+                network = tflearn.layers.conv.atrous_conv_2d(network, 
+                                                             int(layer["filter_number"]), 
+                                                             [1,3], 
+                                                             int(layer["dilation_rate"]), 
+                                                             padding="same",
+                                                             regularizer=layer["regularizer"],
+                                                             weight_decay=0.0)
+                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                network = tflearn.activation(network, activation="ReLU")
+                network = tflearn.layers.dropout(network, .8)
+                network = tflearn.layers.conv.atrous_conv_2d(network, 
+                                                             int(layer["filter_number"]),
+                                                             [1,3], 
+                                                             int(layer["dilation_rate"]), 
+                                                             padding="same",
+                                                             regularizer=layer["regularizer"],
+                                                             weight_decay=0.0)
+                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                network = tflearn.activation(network, activation="ReLU")
+                network = tflearn.layers.dropout(network, .8)
+                network = tflearn.layers.conv.conv_2d(network, 
+                                                          int(layer["filter_number"]), 
+                                                          [11,1], 
+                                                          padding="same",
+                                                          regularizer=layer["regularizer"],
+                                                          weight_decay=0.0)
+                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                network = tflearn.activation(network, activation="ReLU")
+                network = tflearn.layers.dropout(network, .8)
+                
+                network = tf.concat([start, network], axis=3)
+                network = tflearn.activation(network, activation="ReLU")
+                self.add_layer_to_dict(layer["type"], network)
+                
             elif layer["type"] == "EIIE_Output_WithW":
                 width = network.get_shape()[2]
                 height = network.get_shape()[1]

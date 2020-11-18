@@ -33,7 +33,7 @@ class DataMatrices:
         :param portion_reversed: if False, the order to sets are [train, validation, test]
         else the order is [test, validation, train]
         """
-        market = "yahoo"
+        market = "poloniex"
         start = int(start)
         self.__end = int(end)
         # assert window_size >= MIN_NUM_PERIOD

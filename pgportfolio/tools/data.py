@@ -82,6 +82,8 @@ def get_type_list(feature_number):
         type_list = ["close", "high", "low"]
     elif feature_number == 4:
         type_list = ["close", "high", "low", "open"]
+    elif feature_number == 5:
+        type_list = ["close", "high", "low", "open", "volume"]
     else:
         raise ValueError("feature number could not be %s" % feature_number)
     return type_list
