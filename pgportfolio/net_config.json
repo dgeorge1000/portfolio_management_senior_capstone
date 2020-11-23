@@ -18,11 +18,11 @@
 
   "input":{
     "window_size":5,
-    "coin_number":2,
+    "coin_number":10,
     "global_period":1800,
     "feature_number":3,
     "test_portion":0.08,
-    "online":false,
+    "online":true,
     "market_type":"yahoo",
     "start_date":"2014/01/01",
     "end_date":"2020/07/01",
