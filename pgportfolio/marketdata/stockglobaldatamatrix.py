@@ -21,18 +21,13 @@ from datetime import date
 class StockHistoryManager:
     # if offline ,the coin_list could be None
     # NOTE: return of the sqlite results is a list of tuples, each tuple is a row
-    def __init__(self, coin_number, end, volume_average_days=1, volume_forward=0, online=True):
+    def __init__(self, coin_number, end, stocks, volume_average_days=1, volume_forward=0, online=True):
         self.__storage_period = FIVE_MINUTES  # keep this as 300
         self._coin_number = coin_number
         self.__volume_forward = volume_forward
         self.__volume_average_days = volume_average_days
-        self.__coins = []
-        with open('most_active_stocks.txt','r') as file:                
-            for line in file:                   # reading each line                  
-                for word in line.split():       # reading each word        
-                    self.__coins.append(word)
-
-    # 
+        self.__coins = stocks
+        
     def coins(self):
         return self.__coins
     
@@ -44,26 +39,18 @@ class StockHistoryManager:
 
     # returns the stocks into a multiIndex dataframe
     # NOTE need to change start and end to timestamp, and period is 1 day as of now
-    def get_global_dataframe(self, start, end, features): 
+    def get_global_dataframe(self, start, end, features, stocks): 
         #Sample start and end
-        start_date= "2014-01-01"
-        end_date="2020-07-01"
-        
-        ticker_list = []            # Tickers list that will stock names from "most_active_stocks.txt"
+        ticker_list = []            # Tickers list that hold stock names from parameter 'stocks' passed in
         df_list = []                # list of all dataframes for stocks
 
         features = [feature.capitalize() for feature in features]
-        with open('most_active_stocks.txt','r') as file:                
-            for line in file:                   # reading each line                  
-                for word in line.split():       # reading each word        
-                    ticker_list.append(word)    # store stock name into ticker list   
-                    
-               
+        ticker_list = stocks                  
         def getData(ticker):
             startdt = datetime.fromtimestamp(start)
             enddt = datetime.fromtimestamp(end)
             print("getting stock data from: " + ticker)
-            data = pdr.DataReader(ticker,start=start_date, end=end_date, data_source='yahoo')
+            data = pdr.DataReader(ticker,start=startdt, end=enddt, data_source='yahoo')
             df = pd.DataFrame(data, columns = features)
             df_list.append(df)                  # puts dataframe into the list
                     
@@ -71,8 +58,8 @@ class StockHistoryManager:
         for tik in ticker_list:
             df = getData(tik)
                     
-        df = pd.concat(df_list, axis=1, join='inner')           # contains all dataframes
-        stocks = ticker_list
+        df = pd.concat(df_list, axis=1, join='outer')           # contains all dataframes
+        df.fillna(method='bfill', inplace=True)
          
         df.index.name = None            # remove the name index
         index = pd.MultiIndex.from_product([df.index])
@@ -80,8 +67,8 @@ class StockHistoryManager:
 
         # create the DataFrame
         panel = pd.DataFrame(df.values, index=index, columns=columns, dtype="float64")
-        
-        panel = panel_fillna(panel, "both")
+        print(panel)
+        # panel = panel_fillna(panel, "both")
         return panel
 
     # select top coin_number of coins by volume from start to end
