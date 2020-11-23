@@ -75,6 +75,7 @@ def main():
                      online=True,
                      period=config["input"]["global_period"],
                      volume_average_days=config["input"]["volume_average_days"],
+                     market=config["input"]["market_type"],
                      coin_filter=config["input"]["coin_number"],
                      is_permed=config["input"]["is_permed"],
                      test_portion=config["input"]["test_portion"],
