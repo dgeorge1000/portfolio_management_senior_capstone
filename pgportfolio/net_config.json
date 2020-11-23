@@ -23,9 +23,11 @@
     "feature_number":3,
     "test_portion":0.08,
     "online":false,
+    "market_type":"yahoo",
     "start_date":"2014/01/01",
     "end_date":"2020/07/01",
-    "volume_average_days":30
+    "volume_average_days":30,
+    "stocks": ["NIO", "AAPL", "BABA", "GE", "PLUG", "BAC", "F", "NOK", "ABEV", "TWTR"]
   },
 
   "trading":{
