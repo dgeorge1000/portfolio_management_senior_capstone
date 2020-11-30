@@ -52,6 +52,15 @@ def fill_layers_default(layers):
             set_missing(layer, "activation_function", "relu")
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
+        elif layer["type"] == "DilatedConvLayer":
+            set_missing(layer, "padding", "valid")
+            set_missing(layer, "activation_function", "relu")
+            set_missing(layer, "regularizer", None)
+            set_missing(layer, "weight_decay", 0.0)
+        elif layer["type"] == "Activation":
+            pass
+        elif layer["type"] == "AveragePooling":
+            pass
         elif layer["type"] == "EIIE_Dense":
             set_missing(layer, "activation_function", "relu")
             set_missing(layer, "regularizer", None)

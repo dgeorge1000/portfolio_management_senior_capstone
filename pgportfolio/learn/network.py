@@ -54,6 +54,8 @@ class CNN(NeuralNetWork):
                                                               regularizer=layer["regularizer"],
                                                               weight_decay=layer["weight_decay"] )
                 self.add_layer_to_dict(layer["type"], network)
+            elif layer["type"] == "Activation":
+                network = tflearn.activation(network, activation=layer["activation_type"])
             elif layer["type"] == "DropOut":
                 network = tflearn.layers.core.dropout(network, layer["keep_probability"])
             elif layer["type"] == "EIIE_Dense":
@@ -70,6 +72,14 @@ class CNN(NeuralNetWork):
                 network = tflearn.layers.conv_2d(network, int(layer["filter_number"]),
                                                  allint(layer["filter_shape"]),
                                                  allint(layer["strides"]),
+                                                 layer["padding"],
+                                                 layer["activation_function"],
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+            elif layer["type"] == "DilatedConvLayer":
+                network = tflearn.layers.conv.atrous_conv_2d(network, int(layer["filter_number"]),
+                                                 allint(layer["filter_shape"]),
+                                                 int(layer["rate"])
                                                  layer["padding"],
                                                  layer["activation_function"],
                                                  regularizer=layer["regularizer"],
@@ -118,42 +128,51 @@ class CNN(NeuralNetWork):
                 network = tf.reshape(network, [-1, self._rows, 1, int(layer["neuron_number"])])                    
                     
             elif layer["type"] == "TCCBlock":
-                start = tflearn.layers.conv_2d(network, int(layer["filter_number"]), 
+                start = network 
+                """tflearn.layers.conv_2d(network, int(layer["filter_number"]), 
                                                              [1,1],
                                                              padding="same",
-                                                             weight_decay=0.0)
+                                                             activation="ReLU",
+                                                             weight_decay=0.0)"""
                 network = tflearn.layers.conv.atrous_conv_2d(network, 
                                                              int(layer["filter_number"]), 
                                                              [1,3], 
                                                              int(layer["dilation_rate"]), 
                                                              padding="same",
+                                                             activation="ReLU",
                                                              regularizer=layer["regularizer"],
-                                                             weight_decay=0.0)
-                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                                                             weight_decay=0)
+                network = tflearn.layers.normalization.local_response_normalization(network)
                 network = tflearn.activation(network, activation="ReLU")
-                network = tflearn.layers.dropout(network, .8)
+                network = tflearn.layers.dropout(network, layer["keep_prob"])
                 network = tflearn.layers.conv.atrous_conv_2d(network, 
                                                              int(layer["filter_number"]),
                                                              [1,3], 
                                                              int(layer["dilation_rate"]), 
                                                              padding="same",
+                                                             activation="ReLU",
                                                              regularizer=layer["regularizer"],
-                                                             weight_decay=0.0)
-                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                                                             weight_decay=0)
+                network = tflearn.layers.normalization.local_response_normalization(network)
                 network = tflearn.activation(network, activation="ReLU")
-                network = tflearn.layers.dropout(network, .8)
+                network = tflearn.layers.dropout(network, layer["keep_prob"])
                 network = tflearn.layers.conv.conv_2d(network, 
                                                           int(layer["filter_number"]), 
-                                                          [11,1], 
+                                                          [self._rows, 1], 
                                                           padding="same",
+                                                          activation="ReLU",
                                                           regularizer=layer["regularizer"],
-                                                          weight_decay=0.0)
-                #network = tflearn.layers.batch_normalization(network, trainable=False)
+                                                          weight_decay=0)
                 network = tflearn.activation(network, activation="ReLU")
-                network = tflearn.layers.dropout(network, .8)
+                network = tflearn.layers.dropout(network, layer["keep_prob"])
                 
-                network = tf.concat([start, network], axis=3)
-                network = tflearn.activation(network, activation="ReLU")
+                network = tf.concat([network, start], axis=3)
+                network = tflearn.layers.conv_2d(network, int(layer["filter_number"]), 
+                                                             [1,1],
+                                                             padding="same",
+                                                             activation="ReLU",
+                                                             weight_decay=0)
+                #network = tflearn.activation(network+start, activation="ReLU")
                 self.add_layer_to_dict(layer["type"], network)
                 
             elif layer["type"] == "EIIE_Output_WithW":
