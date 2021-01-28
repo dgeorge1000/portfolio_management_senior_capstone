@@ -1,37 +1,41 @@
 {
   "layers":
   [
-    {"filter_shape": [1, 2], "filter_number": 3, "type": "ConvLayer"},
-    {"filter_number":10, "type": "EIIE_Dense", "regularizer": "L2", "weight_decay": 5e-9},
+    {"filter_shape": [1, 3], "filter_number": 4, "type": "DilatedConvLayer", "rate":1, "padding":"same"},
+    {"type": "DropOut", "keep_probability":0.8},
+    {"filter_shape": [1, 3], "filter_number": 4, "type": "DilatedConvLayer", "rate":2, "padding":"same"},
+    {"type": "DropOut", "keep_probability":0.8},
+
+    {"filter_number":4, "type": "EIIE_Dense", "regularizer": "L2", "weight_decay": 5e-9},
     {"type": "EIIE_Output_WithW","regularizer": "L2", "weight_decay": 5e-8}
   ],
   "training":{
-    "steps":2000000,
-    "learning_rate":0.000001,
-    "batch_size":5,
+    "steps":20000,
+    "learning_rate":0.001,
+    "batch_size":109,
     "buffer_biased":5e-5,
     "snap_shot":false,
     "fast_train":true,
     "training_method":"Adam",
-    "loss_function":"riskfactor"
+    "loss_function":"rewardfunction6"
   },
 
   "input":{
-    "window_size":5,
-    "coin_number":10,
+    "window_size":50,
+    "coin_number":8,
     "global_period":1800,
-    "feature_number":3,
+    "feature_number":4,
     "test_portion":0.08,
-    "online":true,
-    "market_type":"yahoo",
-    "start_date":"2014/01/01",
+    "online":false,
+    "market_type":"poloniex",
+    "start_date":"2018/07/01",
     "end_date":"2020/07/01",
     "volume_average_days":30,
-    "stocks": ["NIO", "AAPL", "BABA", "GE", "PLUG", "BAC", "F", "NOK", "ABEV", "TWTR"]
+    "stocks": [ "TMF", "TQQQ", "UGL", "SSO", "UBT"]
   },
 
   "trading":{
-    "trading_consumption":0.0025,
+    "trading_consumption":0.001,
     "rolling_training_steps":50,
     "learning_rate":0.00028,
     "buffer_biased":5e-5

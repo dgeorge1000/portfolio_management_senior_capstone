@@ -21,20 +21,21 @@ class NNAgent:
                                                      self.__coin_number])
         self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]),
                                        self.__y[:, 0, :]], 1)
-        self.__future_omega = (self.__future_price * self.__net.output) /\
-                              tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None]
+        self.__future_diff = self.__future_price-1
+        self.__future_omega = ((self.__future_diff * self.__net.output)+1) /\
+                              tf.reduce_sum((self.__future_diff * self.__net.output +1), axis=1)[:, None]
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
         self.__commission_ratio = self.__config["trading"]["trading_consumption"]
-        self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) *\
+        self.__pv_vector = (tf.reduce_sum(self.__net.output * self.__future_diff, reduction_indices=[1]) +1) *\
                            (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
-        self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price,
-                                                                   reduction_indices=[1])))
+        self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_diff,
+                                                                   reduction_indices=[1])+1)) 
         self.__portfolio_value = tf.reduce_prod(self.__pv_vector)
         self.__mean = tf.reduce_mean(self.__pv_vector)
         self.__log_mean = tf.reduce_mean(tf.log(self.__pv_vector))
         self.__standard_deviation = tf.sqrt(tf.reduce_mean((self.__pv_vector - self.__mean) ** 2))
         self.__sharp_ratio = (self.__mean - 1) / self.__standard_deviation
-        self.__loss = self.__set_loss_function()
+        self.__loss = -self.__log_mean_free#self.__set_loss_function()#
         self.__train_operation = self.init_train(learning_rate=self.__config["training"]["learning_rate"],
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
@@ -64,7 +65,14 @@ class NNAgent:
     @property
     def sharp_ratio(self):
         return self.__sharp_ratio
-
+    
+    @property
+    def future_price(self):
+        return self.__future_price
+    
+    @property
+    def future_diff(self):
+        return self.__future_diff
     @property
     def log_mean(self):
         return self.__log_mean
@@ -100,6 +108,7 @@ class NNAgent:
 
         def loss_function6():
             return -tf.reduce_mean(tf.log(self.pv_vector))
+            #return -tf.reduce_mean(self.pv_vector)
 
         def loss_function7():
             return -tf.reduce_mean(tf.log(self.pv_vector)) + \
@@ -184,14 +193,17 @@ class NNAgent:
         :param tensors:
         :return:
         """
+
         tensors = list(tensors)
         tensors.append(self.__net.output)
         #print(x)
         if np.any(np.isnan(x)):
             print(x)
-        
+        #print(self.pv_vector)
+        #print(self.__pv_vector)
         #print(self.__net.previous_w, self.__net.output)
-        
+        #print(np.sum(np.abs(last_w)))
+        #print(self.__net.session.run(self.__pv_vector.eval))
         assert not np.any(np.isnan(x))
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)),\

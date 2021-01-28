@@ -94,28 +94,35 @@ class TraderTrainer:
         fast_train = self.train_config["fast_train"]
         tflearn.is_training(False, self._agent.session)
 
-        summary, v_pv, v_log_mean, v_loss, log_mean_free, weights= \
+        summary, v_pv, v_log_mean, v_loss, log_mean_free, weights, p, d, pv= \
             self._evaluate("test", self.summary,
                            self._agent.portfolio_value,
                            self._agent.log_mean,
                            self._agent.loss,
                            self._agent.log_mean_free,
-                           self._agent.portfolio_weights)
+                           self._agent.portfolio_weights,
+                           self._agent.future_price,
+                           self._agent.future_diff,
+                           self._agent.pv_vector)
         self.test_writer.add_summary(summary, step)
 
         if not fast_train:
             summary, loss_value = self._evaluate("training", self.summary, self._agent.loss)
             self.train_writer.add_summary(summary, step)
-
+        print(weights.dtype, d.dtype)
         # print 'ouput is %s' % out
         logging.info('='*30)
         logging.info('step %d' % step)
         logging.info('-'*30)
+        x = weights*d
         if not fast_train:
             logging.info('training loss is %s\n' % loss_value)
         logging.info('the portfolio value on test set is %s\nlog_mean is %s\n'
                      'loss_value is %3f\nlog mean without commission fee is %3f\n' % \
                      (v_pv, v_log_mean, v_loss, log_mean_free))
+        #logging.info('price %s' % p)
+        #logging.info('diff %s' % d)
+        logging.info('pv %s' % pv)
         logging.info('='*30+"\n")
 
         if not self.__snap_shot:

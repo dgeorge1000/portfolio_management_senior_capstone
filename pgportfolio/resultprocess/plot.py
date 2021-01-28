@@ -61,9 +61,10 @@ def plot_backtest(config, algos, labels=None):
     dates = [datetime.datetime.fromtimestamp(int(ts)-int(ts)%config["input"]["global_period"])
              for ts in timestamps]
 
-    weeks = mdates.WeekdayLocator()
-    days = mdates.DayLocator()
-
+    #weeks = mdates.WeekdayLocator()
+    #days = mdates.DayLocator()
+    weeks = mdates.MonthLocator()
+    days = mdates.WeekdayLocator()
     rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"],
                   "size": 8})
 

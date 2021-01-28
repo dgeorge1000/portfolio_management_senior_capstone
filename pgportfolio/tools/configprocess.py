@@ -57,6 +57,10 @@ def fill_layers_default(layers):
             set_missing(layer, "activation_function", "relu")
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
+        elif layer["type"] == "ResidualTCN":
+            set_missing(layer, "activation_function", "relu")
+            set_missing(layer, "regularizer", None)
+            set_missing(layer, "weight_decay", 0.0)
         elif layer["type"] == "Activation":
             pass
         elif layer["type"] == "AveragePooling":
@@ -73,12 +77,17 @@ def fill_layers_default(layers):
             set_missing(layer, "dropouts", None)
         elif layer["type"] == "EIIE_Output" or\
                 layer["type"] == "Output_WithW" or\
+                layer["type"] == "EIIE_ShortSell" or\
                 layer["type"] == "EIIE_Output_WithW":
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
         elif layer["type"] == "DropOut":
             pass
         elif layer["type"] == "CNN_LSTM":
+            pass
+        elif layer["type"] == "MaxPooling":
+            pass
+        elif layer["type"] == "BatchNormalization":
             pass
         elif layer["type"] == "TCCBlock":
             set_missing(layer, "regularizer", None)

@@ -79,7 +79,7 @@ class CNN(NeuralNetWork):
             elif layer["type"] == "DilatedConvLayer":
                 network = tflearn.layers.conv.atrous_conv_2d(network, int(layer["filter_number"]),
                                                  allint(layer["filter_shape"]),
-                                                 int(layer["rate"])
+                                                 int(layer["rate"]),
                                                  layer["padding"],
                                                  layer["activation_function"],
                                                  regularizer=layer["regularizer"],
@@ -91,6 +91,32 @@ class CNN(NeuralNetWork):
                 network = tflearn.layers.conv.avg_pool_2d(network, layer["strides"])
             elif layer["type"] == "LocalResponseNormalization":
                 network = tflearn.layers.normalization.local_response_normalization(network)
+            elif layer["type"] == "BatchNormalization":
+                network = tflearn.layers.normalization.batch_normalization(network)
+            elif layer["type"] == "ResidualTCN":
+                #From "Probabilistic Forecasting with Temporal Convolutional Neural Network"
+                #Originally used for retail sales prediction
+                start = network
+                network = tflearn.layers.conv.atrous_conv_2d(network, int(layer["filter_number"]),
+                                                 allint(layer["filter_shape"]),
+                                                 int(layer["rate"]),
+                                                 "same",
+                                                 layer["activation_function"],
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+                network = tflearn.layers.core.dropout(network, layer["keep_probability"])
+                network = tflearn.layers.normalization.batch_normalization(network)  
+                network = tflearn.activation(network, activation="ReLU")
+                network = tflearn.layers.conv.atrous_conv_2d(network, int(layer["filter_number"]),
+                                                 allint(layer["filter_shape"]),
+                                                 int(layer["rate"]),
+                                                 "same",
+                                                 layer["activation_function"],
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+                network = tflearn.layers.core.dropout(network, layer["keep_probability"])
+                network = tflearn.layers.normalization.batch_normalization(network) 
+                network = network + start
             elif layer["type"] == "EIIE_Output":
                 width = network.get_shape()[2]
                 network = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
@@ -102,7 +128,33 @@ class CNN(NeuralNetWork):
                 self.add_layer_to_dict(layer["type"], network)
                 network = tf.concat([btc_bias, network], 1)
                 network = tflearn.layers.core.activation(network, activation="softmax")
+                #network = (network)*2
                 self.add_layer_to_dict(layer["type"], network, weights=False)
+            elif layer["type"] == "EIIE_ShortSell":
+                width = network.get_shape()[2]
+                network = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+                self.add_layer_to_dict(layer["type"], network)
+                network = network[:, :, 0, 0]
+                btc_bias = tf.ones((self.input_num, 1))
+                self.add_layer_to_dict(layer["type"], network)
+                network = tf.concat([btc_bias, network], 1)
+                network = -tflearn.layers.core.activation(network, activation="softmax")
+                """
+                network = network[:, 0]
+                print(network.shape)
+                network = tf.concat([network, tf.concat([tf.zeros(1), tf.ones(1)], axis=0)], axis=1)
+                print(network.shape)
+                """
+                #print(network.shape)
+                #network[1] = tf.constant([0.0, -1.0, 0.0])
+                #network = network#*tf.concat(tf.zeros(1), tf.ones(1), tf.zeros(1))
+                #network = (network-.5)
+                #netsum = tf.math.reduce_sum(tf.math.abs(network))
+                #network = network/netsum
+                self.add_layer_to_dict(layer["type"], network, weights=False)
+                
             elif layer["type"] == "Output_WithW":
                 network = tflearn.flatten(network)
                 network = tf.concat([network,self.previous_w], axis=1)
