@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
 import tensorflow as tf
+import tensorflow_probability as tfp
 import tflearn
 
 
@@ -249,7 +250,28 @@ class CNN(NeuralNetWork):
                 self.add_layer_to_dict('voting', network, weights=False)
                 network = tflearn.layers.core.activation(network, activation="softmax")
                 self.add_layer_to_dict('softmax_layer', network, weights=False)
-
+                
+            elif layer["type"] == "EIIE_Output_WithShort":
+                network = tflearn.layers.conv_2d(network, 1, [1, 1], padding="valid",
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+                self.add_layer_to_dict(layer["type"], network)
+                network = network[:, :, 0, 0]
+                #btc_bias = tf.zeros((self.input_num, 1))
+                btc_bias = tf.get_variable("btc_bias", [1, 1], dtype=tf.float32,
+                                       initializer=tf.zeros_initializer)
+                # self.add_layer_to_dict(layer["type"], network, weights=False)
+                btc_bias = tf.tile(btc_bias, [self.input_num, 1])
+                network = tf.concat([btc_bias, network], 1)
+                self.voting = network
+                self.add_layer_to_dict('voting', network, weights=False)
+                avg = tfp.stats.percentile(network, layer["short_percentile"])
+                sub = network-avg
+                normalized = tf.math.abs(sub)
+                sign = tf.math.sign(sub)
+                network = tf.nn.softmax(normalized)*sign
+                #network = tflearn.layers.core.activation(network, activation="softmax")
+                self.add_layer_to_dict('softmax_layer', network, weights=False)
             elif layer["type"] == "EIIE_LSTM" or\
                             layer["type"] == "EIIE_RNN":
                 network = tf.transpose(network, [0, 2, 3, 1])

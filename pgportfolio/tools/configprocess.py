@@ -78,9 +78,11 @@ def fill_layers_default(layers):
         elif layer["type"] == "EIIE_Output" or\
                 layer["type"] == "Output_WithW" or\
                 layer["type"] == "EIIE_ShortSell" or\
-                layer["type"] == "EIIE_Output_WithW":
+                layer["type"] == "EIIE_Output_WithW" or\
+                layer["type"] == "EIIE_Output_WithShort":
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
+            set_missing(layer, "short_percentile", 50)
         elif layer["type"] == "DropOut":
             pass
         elif layer["type"] == "CNN_LSTM":

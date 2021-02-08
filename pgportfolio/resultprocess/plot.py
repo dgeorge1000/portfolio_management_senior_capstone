@@ -79,12 +79,12 @@ def plot_backtest(config, algos, labels=None):
             label = labels[i]
         else:
             label = NAMES[algos[i]]
-        ax.semilogy(dates, pvs, linewidth=1, label=label)
+        ax.plot(dates, pvs, linewidth=1, label=label)
         #ax.plot(dates, pvs, linewidth=1, label=label)
 
     plt.ylabel("portfolio value $p_t/p_0$", fontsize=12)
     plt.xlabel("time", fontsize=12)
-    xfmt = mdates.DateFormatter("%m-%d %H:%M")
+    xfmt = mdates.DateFormatter("%m-%d-%y")
     ax.xaxis.set_major_locator(weeks)
     ax.xaxis.set_minor_locator(days)
     datemin = dates[0]
