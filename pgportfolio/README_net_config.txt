@@ -1,4 +1,4 @@
-This file will describe the net_config options
+This file will describe the net_config options.
 
 {
   "layers":
