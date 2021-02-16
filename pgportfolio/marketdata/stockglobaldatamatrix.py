@@ -13,6 +13,8 @@ import logging
 
 from pandas_datareader import data as pdr
 from datetime import date
+from ta import add_all_ta_features
+from ta.utils import dropna
 #import yfinance as yf
 #yf.pdr_override()
 
@@ -37,38 +39,39 @@ class StockHistoryManager:
         """
         return self.get_global_dataframe(start, end, features).values
 
-    # returns the stocks into a multiIndex dataframe
-    # NOTE need to change start and end to timestamp, and period is 1 day as of now
+    # returns the securities and tech ind into a multiIndex dataframe
     def get_global_dataframe(self, start, end, features, stocks): 
         #Sample start and end
-        ticker_list = []            # Tickers list that hold stock names from parameter 'stocks' passed in
         df_list = []                # list of all dataframes for stocks
 
-        features = [feature.capitalize() for feature in features]
-        ticker_list = stocks                  
+        # features = [feature.capitalize() for feature in features]
+        
         def getData(ticker):
-            startdt = datetime.fromtimestamp(start)
+            startdt = datetime.fromtimestamp(start)         # convert timestamp to date and time
             enddt = datetime.fromtimestamp(end)
             print("getting stock data from: " + ticker)
-            data = pdr.DataReader(ticker,start=startdt, end=enddt, data_source='yahoo')
-            df = pd.DataFrame(data, columns = features)
+            data = pdr.DataReader(ticker,start=startdt, end=enddt, data_source='yahoo')     # get the security data from yfinance
+            df = pd.DataFrame(data, columns = ['Close','High','Low','Open','Volume'])       # construct dataframe with security data
+            df = add_all_ta_features(df, open="Open", high="High", low="Low", close="Close", volume="Volume", fillna='bfill')  # add all tech ind, with back fill for NaN values
+            df.fillna(method='ffill', inplace=True)         # forward fill NaN if necessary
+            df.columns = df.columns.str.lower()             # lowercase columns for proper input
+            df = df[features]                               # crop the dataframe to include only features the user wants
             df_list.append(df)                  # puts dataframe into the list
-                    
-                    
-        for tik in ticker_list:
+                                             
+        for tik in stocks:          # calls each security to be added to the dataframe
             df = getData(tik)
-                    
-        df = pd.concat(df_list, axis=1, join='outer')           # contains all dataframes
+                        
+        df = pd.concat(df_list, axis=1, join='outer')           # concatenate the list of dataframes into one Multi Index dataframe
         df.fillna(method='bfill', inplace=True)
-         
+        df.fillna(method='ffill', inplace=True)
+             
         df.index.name = None            # remove the name index
         index = pd.MultiIndex.from_product([df.index])
-        columns = pd.MultiIndex.from_product([ticker_list, features])
+        columns = pd.MultiIndex.from_product([stocks, features])
 
-        # create the DataFrame
+        # contains the final dataframe in proper format for the neural netwoek
         panel = pd.DataFrame(df.values, index=index, columns=columns, dtype="float64")
         print(panel)
-        # panel = panel_fillna(panel, "both")
         return panel
 
     # select top coin_number of coins by volume from start to end
