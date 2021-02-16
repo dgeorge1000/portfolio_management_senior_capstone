@@ -9,15 +9,15 @@ import logging
 import json
 from pgportfolio.tools.configprocess import parse_time
 from pgportfolio.tools.configprocess import preprocess_config
-from pgportfolio.tools.data import get_volume_forward, get_type_list
+from pgportfolio.tools.data import get_volume_forward
 import pgportfolio.marketdata.replaybuffer as rb
 
 MIN_NUM_PERIOD = 3
 
 
 class DataMatrices:
-    def __init__(self, start, end, period, market, batch_size=50, volume_average_days=30, buffer_bias_ratio=0,
-                 coin_filter=1, window_size=50, feature_number=3, test_portion=0.15,
+    def __init__(self, start, end, period, market, feature_number, batch_size=50, volume_average_days=30, buffer_bias_ratio=0,
+                 coin_filter=1, window_size=50, test_portion=0.15,
                  portion_reversed=False, online=False, is_permed=False):
         """
         :param start: Unix time
@@ -35,6 +35,8 @@ class DataMatrices:
         :param portion_reversed: if False, the order to sets are [train, validation, test]
         else the order is [test, validation, train]
         """
+        
+        # access json file and retrieve any relevant information the user wants to include
         with open("./pgportfolio/net_config.json") as file:
             config = json.load(file)
         config = preprocess_config(config)
@@ -43,7 +45,9 @@ class DataMatrices:
         self.__end = int(end)
         # assert window_size >= MIN_NUM_PERIOD
         self.__coin_no = coin_filter
-        type_list = get_type_list(feature_number)
+        feature_number = config["input"]["feature_number"]
+        # type_list = get_type_list(price_indexes, feature_number, tech_ind)
+        type_list = config["input"]["features_list"]
         self.__features = type_list
         self.feature_number = feature_number
         volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)
