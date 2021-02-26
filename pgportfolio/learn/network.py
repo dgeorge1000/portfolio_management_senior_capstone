@@ -12,6 +12,7 @@ class NeuralNetWork:
     def __init__(self, feature_number, rows, columns, layers, device):
         tf_config = tf.ConfigProto()
         self.session = tf.Session(config=tf_config)
+        tflearn.config.init_training_mode()
         if device == "cpu":
             tf_config.gpu_options.per_process_gpu_memory_fraction = 0
         else:
@@ -93,7 +94,9 @@ class CNN(NeuralNetWork):
             elif layer["type"] == "LocalResponseNormalization":
                 network = tflearn.layers.normalization.local_response_normalization(network)
             elif layer["type"] == "BatchNormalization":
-                network = tflearn.layers.normalization.batch_normalization(network)
+                #network = tf.nn.batch_normalization(network, 0.0, 1.0,0.0,0.0,0.0)
+                network = tflearn.layers.normalization.batch_normalization(network, trainable=False)
+                self.add_layer_to_dict(layer["type"], network)
             elif layer["type"] == "ResidualTCN":
                 #From "Probabilistic Forecasting with Temporal Convolutional Neural Network"
                 #Originally used for retail sales prediction
@@ -131,29 +134,34 @@ class CNN(NeuralNetWork):
                 network = tflearn.layers.core.activation(network, activation="softmax")
                 #network = (network)*2
                 self.add_layer_to_dict(layer["type"], network, weights=False)
-            elif layer["type"] == "EIIE_ShortSell":
+            elif layer["type"] == "EIIE_ShortSell_Reinvest":
+                borrowamount = 1
                 width = network.get_shape()[2]
-                network = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
+                long = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
                                                  regularizer=layer["regularizer"],
                                                  weight_decay=layer["weight_decay"])
+                short = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
+                                                 regularizer=layer["regularizer"],
+                                                 weight_decay=layer["weight_decay"])
+                #reinvest = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
+                #                                 regularizer=layer["regularizer"],
+                #                                 weight_decay=layer["weight_decay"])
                 self.add_layer_to_dict(layer["type"], network)
-                network = network[:, :, 0, 0]
+                long = long[:, :, 0, 0]
+                short = short[:, :, 0, 0]
+                #reinvest = reinvest[:, :, 0, 0]
                 btc_bias = tf.ones((self.input_num, 1))
                 self.add_layer_to_dict(layer["type"], network)
-                network = tf.concat([btc_bias, network], 1)
-                network = -tflearn.layers.core.activation(network, activation="softmax")
-                """
-                network = network[:, 0]
-                print(network.shape)
-                network = tf.concat([network, tf.concat([tf.zeros(1), tf.ones(1)], axis=0)], axis=1)
-                print(network.shape)
-                """
-                #print(network.shape)
-                #network[1] = tf.constant([0.0, -1.0, 0.0])
-                #network = network#*tf.concat(tf.zeros(1), tf.ones(1), tf.zeros(1))
-                #network = (network-.5)
-                #netsum = tf.math.reduce_sum(tf.math.abs(network))
-                #network = network/netsum
+                long = tf.concat([btc_bias, long], 1)
+                short = tf.concat([btc_bias, short], 1)
+                #reinvest = tf.concat([btc_bias, reinvest], 1)
+                
+                long = tflearn.layers.core.activation(long, activation="softmax")
+                short = tflearn.layers.core.activation(short, activation="softmax")
+               # reinvest = tflearn.layers.core.activation(reinvest, activation="softmax")
+                
+                network = (1+layer["borrow_amount"])*long - short*layer["borrow_amount"]
+                #network = (network)*2
                 self.add_layer_to_dict(layer["type"], network, weights=False)
                 
             elif layer["type"] == "Output_WithW":
@@ -251,7 +259,7 @@ class CNN(NeuralNetWork):
                 network = tflearn.layers.core.activation(network, activation="softmax")
                 self.add_layer_to_dict('softmax_layer', network, weights=False)
                 
-            elif layer["type"] == "EIIE_Output_WithShort":
+            elif layer["type"] == "EIIE_Shortsell_NoReinvest":
                 network = tflearn.layers.conv_2d(network, 1, [1, 1], padding="valid",
                                                  regularizer=layer["regularizer"],
                                                  weight_decay=layer["weight_decay"])

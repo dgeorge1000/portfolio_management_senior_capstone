@@ -42,6 +42,10 @@ def fill_input_default(input_config):
     set_missing(input_config, "norm_method", "absolute")
     set_missing(input_config, "is_permed", False)
     set_missing(input_config, "fake_ratio", 1)
+    if input_config["features_list"]:
+        input_config["feature_number"] = len(input_config["features_list"])
+    if input_config["stocks"]:
+        input_config["coin_number"] = len(input_config["stocks"])
 
 
 def fill_layers_default(layers):
@@ -77,12 +81,13 @@ def fill_layers_default(layers):
             set_missing(layer, "dropouts", None)
         elif layer["type"] == "EIIE_Output" or\
                 layer["type"] == "Output_WithW" or\
-                layer["type"] == "EIIE_ShortSell" or\
+                layer["type"] == "EIIE_Shortsell_NoReinvest" or\
                 layer["type"] == "EIIE_Output_WithW" or\
-                layer["type"] == "EIIE_Output_WithShort":
+                layer["type"] == "EIIE_ShortSell_Reinvest":
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
             set_missing(layer, "short_percentile", 50)
+            set_missing(layer, "borrow_amount", 1)
         elif layer["type"] == "DropOut":
             pass
         elif layer["type"] == "CNN_LSTM":
@@ -90,6 +95,8 @@ def fill_layers_default(layers):
         elif layer["type"] == "MaxPooling":
             pass
         elif layer["type"] == "BatchNormalization":
+            pass
+        elif layer["type"] == "LocalResponseNormalization":
             pass
         elif layer["type"] == "TCCBlock":
             set_missing(layer, "regularizer", None)

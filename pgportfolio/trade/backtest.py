@@ -14,6 +14,7 @@ class BackTest(trader.Trader):
             data_matrices = self._rolling_trainer.data_matrices
         elif agent_type == "traditional":
             config["input"]["feature_number"] = 1
+            config["input"]["features_list"] = ["close"]
             data_matrices = DataMatrices.create_from_config(config)
         else:
             raise ValueError()
@@ -63,6 +64,7 @@ class BackTest(trader.Trader):
     def generate_history_matrix(self):
         inputs = self.__get_matrix_X()
         if self._agent_type == "traditional":
+            print(np.ones([1, 1, inputs.shape[2]]).shape, inputs.shape )
             inputs = np.concatenate([np.ones([1, 1, inputs.shape[2]]), inputs], axis=1)
             inputs = inputs[:, :, 1:] / inputs[:, :, :-1]
         return inputs

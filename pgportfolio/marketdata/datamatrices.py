@@ -16,7 +16,7 @@ MIN_NUM_PERIOD = 3
 
 
 class DataMatrices:
-    def __init__(self, start, end, period, market, feature_number, batch_size=50, volume_average_days=30, buffer_bias_ratio=0,
+    def __init__(self, start, end, period, market, feature_number, features_list, batch_size=50, volume_average_days=30, buffer_bias_ratio=0,
                  coin_filter=1, window_size=50, test_portion=0.15,
                  portion_reversed=False, online=False, is_permed=False):
         """
@@ -45,10 +45,7 @@ class DataMatrices:
         self.__end = int(end)
         # assert window_size >= MIN_NUM_PERIOD
         self.__coin_no = coin_filter
-        feature_number = config["input"]["feature_number"]
-        # type_list = get_type_list(price_indexes, feature_number, tech_ind)
-        type_list = config["input"]["features_list"]
-        self.__features = type_list
+        self.__features = features_list
         self.feature_number = feature_number
         volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)
         if market == "poloniex":
@@ -58,7 +55,7 @@ class DataMatrices:
             self.__global_data = self.__history_manager.get_global_dataframe(start,
                                                                          self.__end,
                                                                          period=period,
-                                                                         features=type_list)
+                                                                         features=features_list)
         elif market == "yahoo":
             with open("./pgportfolio/net_config.json") as file:
                 config = json.load(file)
@@ -67,10 +64,10 @@ class DataMatrices:
             self.__history_manager = sgdm.StockHistoryManager(coin_number=coin_filter, end=self.__end, stocks=stock_data,
                                                     volume_average_days=volume_average_days,
                                                     volume_forward=volume_forward, online=online)
-            print(start, self.__end, type_list)
+
             self.__global_data = self.__history_manager.get_global_dataframe(start,
                                                                          self.__end,
-                                                                         type_list,
+                                                                         features_list,
                                                                          stock_data)
         else:
             raise ValueError("market {} is not valid".format(market))
@@ -123,6 +120,8 @@ class DataMatrices:
         """
         config = config.copy()
         input_config = config["input"]
+        print(input_config["feature_number"])
+        print(input_config["features_list"])
         train_config = config["training"]
         start = parse_time(input_config["start_date"])
         end = parse_time(input_config["end_date"])
@@ -130,6 +129,7 @@ class DataMatrices:
                             end=end,
                             market=config["input"]["market_type"],
                             feature_number=input_config["feature_number"],
+                            features_list=input_config["features_list"],
                             window_size=input_config["window_size"],
                             online=input_config["online"],
                             period=input_config["global_period"],

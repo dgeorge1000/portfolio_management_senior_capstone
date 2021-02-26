@@ -42,6 +42,8 @@ class NNAgent:
                                                  training_method=self.__config["training"]["training_method"])
         self.__saver = tf.train.Saver()
         if restore_dir:
+            tflearn.config.init_training_mode()
+            #tflearn.is_training(False)
             self.__saver.restore(self.__net.session, restore_dir)
         else:
             self.__net.session.run(tf.global_variables_initializer())
@@ -218,6 +220,7 @@ class NNAgent:
 
     # save the variables path including file name
     def save_model(self, path):
+        pass
         self.__saver.save(self.__net.session, path)
 
     # consumption vector (on each periods)
