@@ -51,10 +51,37 @@ This file will describe the net_config options
   
 ********************************************************************************************************************************************************************************
 
-  "trading":{
-    "trading_consumption":0.0025,
-    "rolling_training_steps":50,
-    "learning_rate":0.00028,
-    "buffer_biased":5e-5
-  }
-}
+TEST RESULTS: bull market
+
+volume_adi: no movement but good
+volume_cmv: no movement but good
+volume_fi: some movement and bad
+volume_mfi: worse
+volume_em: worse
+volume_sma_em: much worse
+volume_vpt: some movement but good
+volume_nvi: no movement but good
+volume_vwap: worse
+volatility_atr: zeros in some column, results are perfectly at 1
+volatility_bbm: worse
+volatility_bbh: better!!  1.589440 BTC
+volatility_bbl: better!!  1.516414 BTC
+volatility_bbw: worse (slightly)
+volatility_bbp: stays at 1
+volatility_bbhi: worse (slightly)
+volatility_bbli: stays at 1
+volatility_kcc: worse (slightly)
+volatility_kch: worse
+volatility_kcl: better!  1.306781 BTC
+volailitity_kcw: worse (slightly)
+volatility_kcp: stays at 1
+volatility_kchi: stays at 1
+volatility_kcli: stays at 1
+volatility_dcl: worse
+volatility_dch: better!! 1.389588 BTC
+volatility_dcm: worse (slightly)
+
+
+
+
+
