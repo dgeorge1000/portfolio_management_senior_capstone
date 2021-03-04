@@ -36,11 +36,23 @@ def get_coin_name_list(config, online):
     return coins
 
 
-def calculate_pv_after_commission(w1, w0, commission_rate):
+def calculate_pv_after_commission(w1, w0, commission_rate, margin_interest):
     """
     @:param w1: target portfolio vector, first element is btc
     @:param w0: rebalanced last period portfolio vector, first element is btc
     @:param commission_rate: rate of commission fee, proportional to the transaction cost
+    """
+        #w_t = self.__future_omega[:self.__net.input_num-1]  # rebalanced
+        #w_t1 = self.__net.output[1:self.__net.input_num]
+        
+    short_portion =  np.abs(np.sum(w1[1:]* (w1[1:]<0) )) #the total shorted stock
+    print(short_portion)
+    #long_portion = np.max(0.0, np.sum(w1[1:]* (w1>0) )-1-short_portion)
+        #the long portion of the stock not including reinvested assets and not borrowed assets
+
+    interest = margin_interest*(short_portion)
+        #interest on borrowed stock
+    mu1 = 1 - np.sum(np.abs(w1[1:]-w0[1:]))*commission_rate - interest
     """
     mu0 = 1
     mu1 = 1 - 2*commission_rate + commission_rate ** 2
@@ -50,6 +62,7 @@ def calculate_pv_after_commission(w1, w0, commission_rate):
             (2 * commission_rate - commission_rate ** 2) *
             np.sum(np.maximum(w0[1:] - mu1*w1[1:], 0))) / \
             (1 - commission_rate * w1[0])
+    """
     return mu1
 
 

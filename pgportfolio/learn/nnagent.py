@@ -26,6 +26,7 @@ class NNAgent:
                               tf.reduce_sum((self.__future_diff * self.__net.output +1), axis=1)[:, None]
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
         self.__commission_ratio = self.__config["trading"]["trading_consumption"]
+        self.__margin_interest = self.__config["trading"]["margin_interest"]/365
         self.__pv_vector = (tf.reduce_sum(self.__net.output * self.__future_diff, reduction_indices=[1]) +1) *\
                            (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
         self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_diff,
@@ -228,7 +229,14 @@ class NNAgent:
         c = self.__commission_ratio
         w_t = self.__future_omega[:self.__net.input_num-1]  # rebalanced
         w_t1 = self.__net.output[1:self.__net.input_num]
-        mu = 1 - tf.reduce_sum(tf.abs(w_t1[:, 1:]-w_t[:, 1:]), axis=1)*c
+        
+        short_portion =  tf.abs(tf.reduce_sum(tf.nn.relu(-w_t1) )) #the total shorted stock
+        #long_portion = tf.reduce_max(0.0, tf.reduce_sum(tf.nn.relu(w_t1) )-1-short_portion)
+        #the long portion of the stock not including reinvested assets and not borrowed assets
+
+        #interest = self.__margin_interest#*(short_portion+long_portion)
+        #interest on borrowed stock
+        mu = 1 - tf.reduce_sum(tf.abs(w_t1[:, 1:]-w_t[:, 1:]), axis=1)*c #- interest
         """
         mu = 1-3*c+c**2
 

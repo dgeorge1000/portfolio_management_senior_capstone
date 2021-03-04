@@ -153,11 +153,12 @@ class CNN(NeuralNetWork):
                 btc_bias = tf.ones((self.input_num, 1))
                 self.add_layer_to_dict(layer["type"], network)
                 long = tf.concat([btc_bias, long], 1)
-                short = tf.concat([btc_bias, short], 1)
+                #short = tf.concat([btc_bias, short], 1)
                 #reinvest = tf.concat([btc_bias, reinvest], 1)
                 
                 long = tflearn.layers.core.activation(long, activation="softmax")
                 short = tflearn.layers.core.activation(short, activation="softmax")
+                short = tf.concat([short, tf.zeros((self.input_num, 1))], 1)
                # reinvest = tflearn.layers.core.activation(reinvest, activation="softmax")
                 
                 network = (1+layer["borrow_amount"])*long - short*layer["borrow_amount"]
@@ -259,7 +260,7 @@ class CNN(NeuralNetWork):
                 network = tflearn.layers.core.activation(network, activation="softmax")
                 self.add_layer_to_dict('softmax_layer', network, weights=False)
                 
-            elif layer["type"] == "EIIE_Shortsell_NoReinvest":
+            elif layer["type"] == "EIIE_ShortSell_NoReinvest":
                 network = tflearn.layers.conv_2d(network, 1, [1, 1], padding="valid",
                                                  regularizer=layer["regularizer"],
                                                  weight_decay=layer["weight_decay"])

@@ -81,7 +81,7 @@ def fill_layers_default(layers):
             set_missing(layer, "dropouts", None)
         elif layer["type"] == "EIIE_Output" or\
                 layer["type"] == "Output_WithW" or\
-                layer["type"] == "EIIE_Shortsell_NoReinvest" or\
+                layer["type"] == "EIIE_ShortSell_NoReinvest" or\
                 layer["type"] == "EIIE_Output_WithW" or\
                 layer["type"] == "EIIE_ShortSell_Reinvest":
             set_missing(layer, "regularizer", None)

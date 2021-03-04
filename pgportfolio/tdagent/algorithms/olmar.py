@@ -80,6 +80,7 @@ class OLMAR(TDAgent):
         # update portfolio
         b = b + lam * (x - x_mean)
         # project it onto simplex
+        print(b, self.euclidean_proj_simplex(b))
         return self.euclidean_proj_simplex(b)
 
 

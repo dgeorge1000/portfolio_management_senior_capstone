@@ -73,7 +73,7 @@ class BackTest(trader.Trader):
         logging.info("the step is {}".format(self._steps))
         logging.debug("the raw omega is {}".format(omega))
         future_price = np.concatenate((np.ones(1), self.__get_matrix_y()))
-        pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)
+        pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate, self._margin_interest)
         portfolio_change = pv_after_commission * (np.sum(omega * (future_price-1))+1)
         self._total_capital *= portfolio_change
         self._last_omega = pv_after_commission * omega * \
