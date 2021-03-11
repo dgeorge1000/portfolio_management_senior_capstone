@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 import pgportfolio.marketdata.globaldatamatrix as gdm
 import pgportfolio.marketdata.stockglobaldatamatrix as sgdm
+import pgportfolio.marketdata.alphaVantage_globaldatamatrix as avgdm
 import numpy as np
 import pandas as pd
 import logging
