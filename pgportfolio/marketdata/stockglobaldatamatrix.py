@@ -15,9 +15,6 @@ from pandas_datareader import data as pdr
 from datetime import date
 from ta import add_all_ta_features
 from ta.utils import dropna
-#import yfinance as yf
-#yf.pdr_override()
-
 
 
 class StockHistoryManager:

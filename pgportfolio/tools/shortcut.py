@@ -1,5 +1,6 @@
 from __future__ import division,absolute_import,print_function
 from pgportfolio.trade.backtest import BackTest
+from pgportfolio.trade.livetrade import LiveTrade
 from pgportfolio.tdagent.algorithms import crp, ons, olmar, up, anticor1, pamr,\
     best, bk, cwmr_std, eg, sp, ubah, wmamr, bcrp, cornk, m0, rmr
 
@@ -21,6 +22,15 @@ def execute_backtest(algo, config):
     backtester.start_trading()
     return backtester.test_pc_vector
 
+def execute_livetrade(algo, config):
+    """
+    @:param algo: string representing the name the name of algorithms
+    @:return: numpy array of portfolio changes
+    """
+    agent, agent_type, net_dir = _construct_agent(algo)
+    livetrader = LiveTrade(config, agent=agent, agent_type=agent_type, net_dir=net_dir)
+    livetrader.start_trading()
+    return livetrader.test_pc_vector
 
 def _construct_agent(algo):
     if algo.isdigit():

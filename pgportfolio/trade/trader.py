@@ -36,7 +36,11 @@ class Trader:
         self._window_size = config["input"]["window_size"]
         self._coin_number = config["input"]["coin_number"]
         self._commission_rate = config["trading"]["trading_consumption"]
-        self._margin_interest = config["trading"]["margin_interest"]/365
+        if config["input"]["market"] == "yahoo":
+            self._margin_interest = config["input"]["trading"]["margin_interest"]/365
+        else:
+            periods_per_day = 86400.0/config["input"]["global_period"]
+            self._margin_interest = config["trading"]["margin_interest"]/(365*periods_per_day)
         self._fake_ratio = config["input"]["fake_ratio"]
         self._asset_vector = np.zeros(self._coin_number+1)
 
@@ -106,8 +110,10 @@ class Trader:
 
     def start_trading(self):
         try:
+            print(self.__class__.__name__)
             if not self.__class__.__name__=="BackTest":
                 current = int(time.time())
+                print(current, self._period)
                 wait = self._period - (current%self._period)
                 logging.info("sleep for %s seconds" % wait)
                 time.sleep(wait+2)

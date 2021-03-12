@@ -9,7 +9,7 @@ from datetime import datetime
 from pgportfolio.tools.configprocess import preprocess_config
 from pgportfolio.tools.configprocess import load_config
 from pgportfolio.tools.trade import save_test_data
-from pgportfolio.tools.shortcut import execute_backtest
+from pgportfolio.tools.shortcut import execute_backtest, execute_livetrade
 from pgportfolio.resultprocess import plot
 
 
@@ -84,6 +84,10 @@ def main():
         config = _config_by_algo(options.algo)
         _set_logging_by_algo(logging.DEBUG, logging.DEBUG, options.algo, "backtestlog")
         execute_backtest(options.algo, config)
+    elif options.mode == "livetrade":
+        config = _config_by_algo(options.algo)
+        _set_logging_by_algo(logging.DEBUG, logging.DEBUG, options.algo, "backtestlog")
+        execute_livetrade(options.algo, config)
     elif options.mode == "save_test_data":
         # This is used to export the test data
         save_test_data(load_config(options.folder))

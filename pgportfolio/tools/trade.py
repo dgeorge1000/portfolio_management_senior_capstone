@@ -46,7 +46,7 @@ def calculate_pv_after_commission(w1, w0, commission_rate, margin_interest):
         #w_t1 = self.__net.output[1:self.__net.input_num]
         
     short_portion =  np.abs(np.sum(w1[1:]* (w1[1:]<0) )) #the total shorted stock
-    print(short_portion)
+    print(short_portion, margin_interest)
     #long_portion = np.max(0.0, np.sum(w1[1:]* (w1>0) )-1-short_portion)
         #the long portion of the stock not including reinvested assets and not borrowed assets
 
