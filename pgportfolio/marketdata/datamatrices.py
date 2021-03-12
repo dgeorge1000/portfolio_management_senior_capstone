@@ -88,7 +88,7 @@ class DataMatrices:
             # return a dataframe of all securities data and corresponding tech. ind.
             self.__global_data = self.__history_manager.get_global_dataframe(start,
                                                                          self.__end,
-                                                                         type_list,
+                                                                         features_list,
                                                                          stock_data,
                                                                          api_key,
                                                                          api_call_limit,
