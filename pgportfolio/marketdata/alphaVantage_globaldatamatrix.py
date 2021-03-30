@@ -55,13 +55,8 @@ class AlphaVantageHistoryManager:
         # convert UNIX time to datetime
         start_date = datetime.utcfromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S')
         end_date = datetime.utcfromtimestamp(end).strftime('%Y-%m-%d %H:%M:%S')
-        # if online == True, the program will get the last 2 years of securities data and push it into an excel
-        # if online == False, the program will read the "./pgportfolio/marketdata/output_alphaVantage.xls" and create the dataframe
-        if not online and os.path.exists("./pgportfolio/marketdata/output_alphaVantage.xlsx"):
-            panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
-            print(panel)
-            return panel
-        else:
+        # if online is True, it will create a multi index dataframe containing 2 years of intraday data and save it into an excel file
+        if online:
             ts = TimeSeries(key = api_key, output_format = 'csv')
             # Alpha Vantage only gives out monly intraday data, so will need to do each month and concatenate to get 2 years of data
             two_years = [   "year1month1", "year1month2", "year1month3", "year1month4", "year1month5", "year1month6",
@@ -154,24 +149,23 @@ class AlphaVantageHistoryManager:
             columns = pd.MultiIndex.from_product([stocks, features])
             panel = pd.DataFrame(df.values, index=index, columns=columns, dtype="float64")      # push dataframe into panel
 
-            panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xlsx")           # save dataframe to an excel so we don't have to rerun to generate values 
+            panel.to_excel("./pgportfolio/marketdata/twoyear_alphaVantage.xlsx")           # save dataframe to an excel so we don't have to rerun to generate values 
             
-            # read from excel and filter out after market trading time data
-            panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
+        # read from excel and filter out after market trading time data
+        panel = pd.read_excel('./pgportfolio/marketdata/twoyear_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
 
 
-            panel.index = panel.index.strftime("%H:%M:%S %Y-%m-%d")
-
-            panel = panel[(panel.index >= '09:30:00')]
-            panel = panel[(panel.index <= '16:00:00')]
-            panel.index = pd.to_datetime(panel.index, format="%H:%M:%S %Y-%m-%d")
-            panel.index = panel.index.strftime("%Y-%m-%d %H:%M:%S")
-            panel = panel[(panel.index >= start_date)]
-            panel = panel[(panel.index <= end_date)]
-            print(panel)
-            panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xlsx") 
-            
-            return panel
+        panel.index = panel.index.strftime("%H:%M:%S %Y-%m-%d")
+        panel = panel[(panel.index >= '09:30:00')]
+        panel = panel[(panel.index <= '16:00:00')]
+        panel.index = pd.to_datetime(panel.index, format="%H:%M:%S %Y-%m-%d")
+        panel.index = panel.index.strftime("%Y-%m-%d %H:%M:%S")
+        panel = panel[(panel.index >= start_date)]
+        panel = panel[(panel.index <= end_date)]
+        print(panel)
+        panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xlsx") 
+        
+        return panel
 
 
     # select top coin_number of coins by volume from start to end
