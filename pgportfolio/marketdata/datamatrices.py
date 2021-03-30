@@ -77,23 +77,22 @@ class DataMatrices:
             stock_data = config["input"]["stocks"]                  # contains user defined securities  
             api_key = config["input"]["api_key"]                    # user Alpha Vantage API Key
             api_call_limit = config["input"]["api_call_limit"]      # user Alpha Vantage call limit
-            api_interval = config["input"]["api_interval"]          # time interval for the data 
-            generate = config["input"]["generate_new_values"]       # whether or not to generate new values or read from .xls file
+            api_interval = config["input"]["api_interval"]          # time interval for the data
             # initiatize stock history manager class
-            self.__history_manager = avgdm.AlphaVantageHistoryManager(coin_number=coin_filter, end=self.__end, stocks=stock_data,
+            self.__history_manager = avgdm.AlphaVantageHistoryManager(coin_number=coin_filter, end=self.__end, online=online, stocks=stock_data,
                                                     api_key=api_key, api_call_limit=api_call_limit, api_interval=api_interval,
-                                                    generate=generate,
                                                     volume_average_days=volume_average_days,
-                                                    volume_forward=volume_forward, online=online)
+                                                    volume_forward=volume_forward)
             # return a dataframe of all securities data and corresponding tech. ind.
             self.__global_data = self.__history_manager.get_global_dataframe(start,
                                                                          self.__end,
+                                                                         online,
                                                                          features_list,
                                                                          stock_data,
                                                                          api_key,
                                                                          api_call_limit,
-                                                                         api_interval,
-                                                                         generate)
+                                                                         api_interval)
+            # fill_dates_alphaVantage()
         else:
             raise ValueError("market {} is not valid".format(market))
                     #Go from [coins*features, index] to [features, coins, index]
