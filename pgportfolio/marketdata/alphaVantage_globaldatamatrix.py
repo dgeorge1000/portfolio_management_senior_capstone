@@ -26,7 +26,7 @@ from datetime import datetime
 # goal is to return panel of data using Alpha Vantage database, sign up for a free API on the website, students can request for premium key for free!
 class AlphaVantageHistoryManager:
     # if offline ,the coin_list could be None
-    def __init__(self, coin_number, end, stocks, api_key, api_call_limit, api_interval, generate, volume_average_days=1, volume_forward=0, online=True):
+    def __init__(self, coin_number, end, online, stocks, api_key, api_call_limit, api_interval, volume_average_days=1, volume_forward=0):
         self.__storage_period = FIVE_MINUTES  # keep this as 300
         self._coin_number = coin_number
         self.__volume_forward = volume_forward
@@ -35,7 +35,7 @@ class AlphaVantageHistoryManager:
         self.__api_key = api_key
         self.__api_call_limit = api_call_limit
         self.__api_interval = api_interval
-        self.__generate_new_values = generate
+        self.__online = online
         
         # global variable to hold each month of data since Alpha Vantage only gives intraday data in month slices
         global df_sec 
@@ -51,11 +51,14 @@ class AlphaVantageHistoryManager:
         return self.get_global_dataframe(start, end, features).values
 
     # returns the securities into a multiIndex dataframe
-    def get_global_dataframe(self, start, end, features, stocks, api_key, api_call_limit, api_interval, generate): 
-        # if generate == True, the program will get the last 2 years of securities data and push it into an excel
-        # if generate == False, the program will read the "./pgportfolio/marketdata/output_alphaVantage.xls" and create the dataframe
-        if not generate and os.path.exists("./pgportfolio/marketdata/output_alphaVantage.xls"):
-            panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xls', header=[0,1], index_col=0)
+    def get_global_dataframe(self, start, end, online, features, stocks, api_key, api_call_limit, api_interval): 
+        # convert UNIX time to datetime
+        start_date = datetime.utcfromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S')
+        end_date = datetime.utcfromtimestamp(end).strftime('%Y-%m-%d %H:%M:%S')
+        # if online == True, the program will get the last 2 years of securities data and push it into an excel
+        # if online == False, the program will read the "./pgportfolio/marketdata/output_alphaVantage.xls" and create the dataframe
+        if not online and os.path.exists("./pgportfolio/marketdata/output_alphaVantage.xlsx"):
+            panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
             print(panel)
             return panel
         else:
@@ -112,6 +115,16 @@ class AlphaVantageHistoryManager:
                     df = add_all_ta_features(df, close="close", high="high", low="low", open="open", volume="volume", fillna='bfill')   # add tech ind
                     df.fillna(method='ffill', inplace=True)
                     df = df[features]                           # include only the indicators wanted by the user
+                    '''
+                    # filter dataframe values to include only those that are within US market trading hours (9:30-4:00)
+                    df.index = df.index.strftime("%H:%M:%S %Y-%m-%d")         # switch timestamp order to remove after hour values (9:30-4)
+                    # remove after market hour data
+                    df = df[(df.index >= '09:30:00')]
+                    df = df[(df.index <= '16:30:00')]
+                    df.index = pd.to_datetime(df.index, format="%H:%M:%S %Y-%m-%d")   # convert object back to datetime
+                    df.index = df.index.strftime("%Y-%m-%d %H:%M:%S")                 # make it back to original timestamp order
+                    df = df.sort_index(ascending=True)
+                    '''
                     print("\n\nINSERTING:", security)
                     print(df)
                     df_complete.append(df)
@@ -141,8 +154,23 @@ class AlphaVantageHistoryManager:
             columns = pd.MultiIndex.from_product([stocks, features])
             panel = pd.DataFrame(df.values, index=index, columns=columns, dtype="float64")      # push dataframe into panel
 
+            panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xlsx")           # save dataframe to an excel so we don't have to rerun to generate values 
+            
+            # read from excel and filter out after market trading time data
+            panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
+
+
+            panel.index = panel.index.strftime("%H:%M:%S %Y-%m-%d")
+
+            panel = panel[(panel.index >= '09:30:00')]
+            panel = panel[(panel.index <= '16:00:00')]
+            panel.index = pd.to_datetime(panel.index, format="%H:%M:%S %Y-%m-%d")
+            panel.index = panel.index.strftime("%Y-%m-%d %H:%M:%S")
+            panel = panel[(panel.index >= start_date)]
+            panel = panel[(panel.index <= end_date)]
             print(panel)
-            panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xls")           # save dataframe to an excel so we don't have to rerun to generate values 
+            panel.to_excel("./pgportfolio/marketdata/output_alphaVantage.xlsx") 
+            
             return panel
 
 
