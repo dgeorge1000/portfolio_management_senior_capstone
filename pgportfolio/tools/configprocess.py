@@ -47,7 +47,34 @@ def fill_input_default(input_config):
     if input_config["stocks"]:
         input_config["coin_number"] = len(input_config["stocks"])
 
+def fill_dates_alphaVantage():
+    panel = pd.read_excel('./pgportfolio/marketdata/output_alphaVantage.xlsx', header=[0,1], index_col=0, engine='openpyxl')
+    panel.index = pd.to_datetime(panel.index, format="%Y-%m-%d %H:%M:%S")
+    df1 = panel.index[0]
+    df2 = panel.iloc[[-1]].index[0]
+    print(df1)
+    print(df2)
+    start_year = str(df1.year)
+    start_day = str(df1.day)
+    start_month = str(df1.month)
+    new_start_date = start_year + "/" + start_month + "/" + start_day
 
+
+    end_year = str(df2.year)
+    end_day = str(df2.day)
+    end_month = str(df2.month)
+    new_end_date = end_year + "/" + end_month + "/" + end_day
+
+    with open('./pgportfolio/net_config.json', 'r') as f:
+        json_data = json.load(f)
+        if new_start_date == json_data['input']['start_date'] and new_end_date == json_data['input']['end_date']:
+            return None
+        json_data['input']['start_date'] = new_start_date
+        json_data['input']['end_date'] = new_end_date
+
+    with open('./pgportfolio/net_config.json', 'w') as f:
+        f.write(json.dumps(json_data, indent=2))
+        
 def fill_layers_default(layers):
     for layer in layers:
         if layer["type"] == "ConvLayer":
