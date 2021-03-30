@@ -10,6 +10,7 @@ import logging
 import json
 from pgportfolio.tools.configprocess import parse_time
 from pgportfolio.tools.configprocess import preprocess_config
+from pgportfolio.tools.configprocess import fill_dates_alphaVantage
 from pgportfolio.tools.data import get_volume_forward
 import pgportfolio.marketdata.replaybuffer as rb
 
